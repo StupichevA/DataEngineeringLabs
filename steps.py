@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import subprocess
 import multiprocessing
 import glob
@@ -16,10 +17,21 @@ WORK_DIR = os.path.join(os.path.dirname(__file__), "mr_work_salary")
 SPLIT_SIZE = 64 * 1024
 WORKERS = 4
 REDUCERS = 2
+MAP_DELAY = float(os.getenv("MAP_DELAY", "0"))  # только для демонстрации
 
 
-def map_task(task):
-    index, start, end, k = task
+def _atomic_write(path, text):
+    tmp = f"{path}.{os.getpid()}.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(text)
+    os.replace(tmp, path)
+
+
+def _done_marker(index):
+    return os.path.join(WORK_DIR, f"map{index:04d}.done")
+
+
+def _process_split(index, start, end, k):
     raw_data = read_s3_split(start, end)
     if not raw_data:
         return 0
@@ -61,26 +73,42 @@ def map_task(task):
     lines_out = result.stdout.splitlines()
     buckets = [[] for _ in range(REDUCERS)]
     for line in lines_out:
-        if '\t' not in line: continue
+        if '\t' not in line:
+            continue
         key = line.split('\t')[0]
         r = zlib.crc32(key.encode()) % REDUCERS
         buckets[r].append(line)
 
     for r, bucket in enumerate(buckets):
-        if not bucket: continue
+        if not bucket:
+            continue
         bucket.sort(key=lambda x: x.split('\t')[0])
         filename = os.path.join(WORK_DIR, f"map{index:04d}-r{r:02d}.txt")
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write("\n".join(bucket))
+        # "\n" в конце: без него последняя строка файла склеивается со следующей в reduce_task
+        _atomic_write(filename, "\n".join(bucket) + "\n")
     return len(lines_out)
+
+
+def map_task(task):
+    index, start, end, k = task
+    if os.path.exists(_done_marker(index)):
+        return index, "skip"          # чекпоинт: сплит уже обработан
+    n = _process_split(index, start, end, k)
+    if MAP_DELAY:
+        time.sleep(MAP_DELAY)
+    _atomic_write(_done_marker(index), str(n))   # маркер пишется последним
+    return index, "done"
 
 
 def reduce_task(r):
     pattern = os.path.join(WORK_DIR, f"map*-r{r:02d}.txt")
     files = glob.glob(pattern)
-    if not files: return
+    if not files:
+        return
 
-    with open(os.path.join(WORK_DIR, f"part-{r:05d}.txt"), "w", encoding="utf-8") as out:
+    final = os.path.join(WORK_DIR, f"part-{r:05d}.txt")
+    tmp = f"{final}.{os.getpid()}.tmp"
+    with open(tmp, "w", encoding="utf-8") as out:
         reducer = subprocess.Popen(REDUCER, stdin=subprocess.PIPE, stdout=out, text=True)
         all_lines = []
         for f_path in files:
@@ -91,17 +119,31 @@ def reduce_task(r):
             reducer.stdin.write(line)
         reducer.stdin.close()
         reducer.wait()
+    os.replace(tmp, final)
 
 
-def run_mapreduce_salary(k, verbose=False):
-    if os.path.exists(WORK_DIR): shutil.rmtree(WORK_DIR)
-    os.makedirs(WORK_DIR)
+def run_mapreduce_salary(k, verbose=False, resume=False, log=print):
+    if not resume and os.path.exists(WORK_DIR):
+        shutil.rmtree(WORK_DIR)
+    os.makedirs(WORK_DIR, exist_ok=True)
 
     file_size = get_file_size()
     tasks = [(i, s, min(s + SPLIT_SIZE, file_size), k) for i, s in enumerate(range(0, file_size, SPLIT_SIZE))]
+    total = len(tasks)
+    ready = sum(os.path.exists(_done_marker(t[0])) for t in tasks)
+    log(f"map: сплитов всего {total}, готово по чекпоинту {ready}")
 
+    done = skipped = 0
     with multiprocessing.Pool(WORKERS) as pool:
-        pool.map(map_task, tasks)
+        for _, status in pool.imap_unordered(map_task, tasks):
+            if status == "skip":
+                skipped += 1
+            else:
+                done += 1
+            if (done + skipped) % 10 == 0:
+                log(f"map: завершено {done + skipped}/{total} (обработал сам {done}, пропустил {skipped})")
+    log(f"map завершён: обработал сам {done}, пропустил по чекпоинту {skipped}")
+
     with multiprocessing.Pool(REDUCERS) as pool:
         pool.map(reduce_task, range(REDUCERS))
 
@@ -114,7 +156,7 @@ def run_mapreduce_salary(k, verbose=False):
                     key, count, median = parts
                     all_results.append((key, int(count), float(median)))
 
-    all_results.sort(key=lambda x: x[2], reverse=True)
+    all_results.sort(key=lambda x: (-x[2], x[0]))   # детерминированный порядок при равных медианах
     df = pd.DataFrame(all_results, columns=["stack", "cnt", "median_salary"])
 
     if verbose:
@@ -125,6 +167,16 @@ def run_mapreduce_salary(k, verbose=False):
         print(df.tail(5).to_string(index=False))
 
     return df
+
+
+def control_numbers(df):
+    top = df.iloc[0] if len(df) else None
+    return {
+        "rows": int(len(df)),
+        "sum_cnt": int(df["cnt"].sum()),
+        "sum_median": round(float(df["median_salary"].sum()), 2),
+        "top1": f"{top['stack']} ({top['median_salary']})" if top is not None else None,
+    }
 
 
 def setup_duckdb():

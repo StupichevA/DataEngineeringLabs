@@ -1,0 +1,145 @@
+stack,cnt,median_salary
+asyncio|python,47,230000.0
+docker|kafka,24,200000.0
+fastapi|kafka,29,200000.0
+kafka|python,43,200000.0
+kafka|rabbitmq,22,200000.0
+nosql|sql,21,200000.0
+asyncio|fastapi,20,190000.0
+fastapi|rabbitmq,26,190000.0
+linux|rabbitmq,23,180000.0
+nginx|rest,47,180000.0
+rabbitmq|rest,48,180000.0
+aiohttp|python,29,174000.0
+ci/cd|python,31,174000.0
+django|nginx,68,174000.0
+django|rabbitmq,67,174000.0
+docker|nginx,57,174000.0
+docker|nosql,22,174000.0
+docker|rabbitmq,73,174000.0
+docker|rest,86,174000.0
+docker|sql,114,174000.0
+git|nginx,55,174000.0
+git|rabbitmq,61,174000.0
+git|rest,167,174000.0
+nginx|python,79,174000.0
+nginx|rabbitmq,40,174000.0
+nginx|sql,49,174000.0
+python|rabbitmq,107,174000.0
+python|react,27,174000.0
+python|rest,226,174000.0
+rabbitmq|sql,54,174000.0
+rest|sql,80,174000.0
+celery|rabbitmq,27,170000.0
+kubernetes|python,36,155000.0
+bash|git,24,153300.0
+api|fastapi,21,150000.0
+docker|flask,30,150000.0
+docker|git,160,150000.0
+docker|linux,82,150000.0
+docker|python,273,150000.0
+linux|nginx,20,150000.0
+pytest|python,20,150000.0
+django|rest,102,145000.0
+docker|fastapi,62,145000.0
+fastapi|python,162,145000.0
+bash|python,30,140000.0
+django|django rest framework,27,140000.0
+docker|kubernetes,28,140000.0
+fastapi|linux,33,140000.0
+python|unittest,27,140000.0
+fastapi|git,68,135250.0
+flask|rest,22,135250.0
+pandas|python,22,135000.0
+api|docker,31,130500.0
+django|sql,126,130500.0
+flask|linux,32,130500.0
+git|sql,154,130500.0
+git|unittest,21,130500.0
+nosql|python,27,130500.0
+flask|sql,44,130250.0
+git|python,422,130250.0
+sql|ооп,44,130250.0
+linux|sql,80,125000.0
+python|sql,308,122500.0
+api|python,73,120000.0
+api|rest,28,120000.0
+api|sql,28,120000.0
+bash|linux,25,120000.0
+celery|docker,47,120000.0
+celery|sql,28,120000.0
+ci/cd|docker,24,120000.0
+django|docker,159,120000.0
+django|flask,46,120000.0
+django|python,336,120000.0
+fastapi|flask,25,120000.0
+flask|python,95,120000.0
+mssql|python,25,120000.0
+python|sqlalchemy,41,120000.0
+fastapi|sqlalchemy,34,116550.0
+flask|git,48,116550.0
+api|flask,22,110000.0
+celery|django,67,110000.0
+fastapi|rest,28,110000.0
+fastapi|sql,51,110000.0
+celery|nginx,20,105000.0
+docker|go,20,105000.0
+django rest framework|python,37,104400.0
+django rest framework|git,22,102200.0
+api|linux,25,100000.0
+celery|git,40,100000.0
+celery|python,75,100000.0
+celery|rest,27,100000.0
+css|django,32,100000.0
+c|python,46,100000.0
+c|sql,20,100000.0
+django|git,177,100000.0
+django|html,46,100000.0
+django|javascript,54,100000.0
+django|linux,77,100000.0
+django|базы данных,33,100000.0
+docker|html,20,100000.0
+docker|базы данных,23,100000.0
+docker|ооп,20,100000.0
+git|linux,155,100000.0
+git|базы данных,45,100000.0
+git|ооп,58,100000.0
+go|python,31,100000.0
+html|javascript,62,100000.0
+html|rest,24,100000.0
+http|python,27,100000.0
+javascript|sql,38,100000.0
+linux|python,234,100000.0
+linux|rest,60,100000.0
+linux|базы данных,31,100000.0
+linux|ооп,29,100000.0
+python|базы данных,81,100000.0
+python|ооп,72,100000.0
+python|работа в команде,29,100000.0
+rest|базы данных,23,100000.0
+sql|базы данных,30,100000.0
+django|fastapi,50,97850.0
+c|linux,26,93500.0
+php|python,20,90000.0
+html|sql,29,87000.0
+javascript|python,107,83520.0
+django|английский язык,20,83500.0
+api|django,27,80000.0
+api|git,42,80000.0
+c#|python,20,80000.0
+django|ооп,26,80000.0
+git|английский язык,28,80000.0
+python|аналитическое мышление,29,80000.0
+python|английский язык,37,80000.0
+docker|javascript,28,76760.0
+css|javascript,45,73950.0
+html|linux,21,70000.0
+html|python,103,70000.0
+javascript|linux,33,70000.0
+css|html,76,69600.0
+css|python,78,69600.0
+github|python,27,69600.0
+javascript|rest,23,69600.0
+git|javascript,45,65000.0
+git|html,36,50000.0
+css|git,26,46750.0

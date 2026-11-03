@@ -1,0 +1,38 @@
+services:
+  zoo1:
+    image: zookeeper:3.9.6
+    container_name: zoo1
+    hostname: zoo1
+    ports: ["2181:2181"]
+    volumes:
+      - ./conf/zoo1.cfg:/conf/zoo.cfg:ro
+      - ./data/zoo1:/data
+  zoo2:
+    image: zookeeper:3.9.6
+    container_name: zoo2
+    hostname: zoo2
+    ports: ["2182:2182"]
+    volumes:
+      - ./conf/zoo2.cfg:/conf/zoo.cfg:ro
+      - ./data/zoo2:/data
+  zoo3:
+    image: zookeeper:3.9.6
+    container_name: zoo3
+    hostname: zoo3
+    ports: ["2183:2183"]
+    volumes:
+      - ./conf/zoo3.cfg:/conf/zoo.cfg:ro
+      - ./data/zoo3:/data
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - ./minio-data:/data
