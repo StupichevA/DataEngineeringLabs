@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ${NAME}
+  namespace: ${NAMESPACE}
+spec:
+  completionMode: Indexed
+  completions: ${COMPLETIONS}
+  parallelism: ${PARALLELISM}
+  backoffLimit: 6
+  template:
+    metadata:
+      labels: {app: hh-mr, stage: "${STAGE}"}
+    spec:
+      restartPolicy: Never
+      priorityClassName: ${PRIORITY_CLASS}
+      containers:
+      - name: worker
+        image: ${IMAGE}
+        imagePullPolicy: IfNotPresent
+        command: ["python", "mr_k8s.py", "${STAGE}", "${K}"]
+        envFrom:
+        - configMapRef: {name: s3-config}
+        - secretRef: {name: s3-secret}
+        env:
+        - {name: TOTAL_TASKS, value: "${COMPLETIONS}"}
+        - {name: REDUCERS, value: "${REDUCERS}"}
+        - {name: HOLD_SECONDS, value: "${HOLD_SECONDS}"}
+        resources:
+          requests: {cpu: ${CPU_REQUEST}, memory: ${MEM_LIMIT}}
+          limits: {memory: ${MEM_LIMIT}}

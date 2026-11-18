@@ -1,37 +1,28 @@
-import time
-import psutil
-import threading
 import os
+import time
+import resource
+
+
+def _cgroup_peak_mb():
+    for p in ("/sys/fs/cgroup/memory.peak", "/sys/fs/cgroup/memory/memory.max_usage_in_bytes"):
+        try:
+            with open(p) as f:
+                return int(f.read().strip()) / 1024 / 1024
+        except Exception:
+            continue
+    return None
 
 
 class Watch:
     def __init__(self):
-        self.me = psutil.Process(os.getpid())
-        self.peak = 0
-        self.running = True
-        self.start_time = time.perf_counter()
-        self.thread = threading.Thread(target=self._loop, daemon=True)
-        self.thread.start()
-
-    def _loop(self):
-        while self.running:
-            try:
-                total_mem = self.me.memory_info().rss
-                for child in self.me.children(recursive=True):
-                    try:
-                        total_mem += child.memory_info().rss
-                    except psutil.NoSuchProcess:
-                        pass
-
-                if total_mem > self.peak:
-                    self.peak = total_mem
-            except psutil.NoSuchProcess:
-                break
-            time.sleep(0.05)
+        self.t0 = time.time()
+        self.seconds = 0.0
+        self.peak_mb = 0.0
+        self.cgroup_peak_mb = None
 
     def stop(self):
-        self.running = False
-        self.thread.join()
-        self.seconds = time.perf_counter() - self.start_time
-        self.peak_mb = self.peak / (1024 * 1024)
-        return self
+        self.seconds = time.time() - self.t0
+        own = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        child = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+        self.peak_mb = max(own, child) / 1024  # Linux: КБ -> МБ
+        self.cgroup_peak_mb = _cgroup_peak_mb()

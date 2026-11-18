@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ${NAME}
+  namespace: ${NAMESPACE}
+spec:
+  backoffLimit: 0            # без повторов: видим ровно одну остановку
+  template:
+    metadata:
+      labels: {app: hh-mr, stage: single}
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: pairs
+        image: ${IMAGE}
+        imagePullPolicy: IfNotPresent
+        command: ["python", "run_single.py", "${K}"]
+        envFrom:
+        - configMapRef: {name: s3-config}
+        - secretRef: {name: s3-secret}
+        resources:
+          requests: {cpu: 250m, memory: ${MEM_LIMIT}}
+          limits: {memory: ${MEM_LIMIT}}
